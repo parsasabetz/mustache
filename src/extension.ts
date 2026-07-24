@@ -1,34 +1,19 @@
-// types
-import type { GitAPI, GitRepository } from "./types"
-
-// modules
 import * as vscode from "vscode"
 import { exec } from "child_process"
 
 let statusBarItem: vscode.StatusBarItem
-let gitExtension: vscode.Extension<GitAPI> | undefined
 
 export function activate(context: vscode.ExtensionContext) {
   statusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left,
-    100,
+    vscode.StatusBarAlignment.Right,
+    1000,
   )
   statusBarItem.command = "mustache.showStashes"
   context.subscriptions.push(statusBarItem)
 
-  gitExtension = vscode.extensions.getExtension<GitAPI>("vscode.git")
+  console.log("Mustache: activating")
 
-  if (gitExtension) {
-    if (!gitExtension.isActive) {
-      gitExtension.activate().then(() => {
-        setupGitListeners()
-        checkStashes()
-      })
-    } else {
-      setupGitListeners()
-      checkStashes()
-    }
-  }
+  checkStashes()
 
   const checkStashesCommand = vscode.commands.registerCommand(
     "mustache.showStashes",
@@ -43,44 +28,29 @@ export function activate(context: vscode.ExtensionContext) {
       checkStashes()
     }),
   )
-}
 
-function setupGitListeners() {
-  if (!gitExtension?.exports) return
-
-  const api = gitExtension.exports
-
-  api.onDidOpenRepository((repo) => {
-    updateStatusBar(repo)
-    repo.onDidChangeState(() => updateStatusBar(repo))
-  })
-
-  for (const repo of api.repositories) {
-    updateStatusBar(repo)
-    repo.onDidChangeState(() => updateStatusBar(repo))
-  }
+  const watcher = vscode.workspace.createFileSystemWatcher("**/.git/refs/stash")
+  watcher.onDidChange(() => checkStashes())
+  watcher.onDidCreate(() => checkStashes())
+  watcher.onDidDelete(() => checkStashes())
+  context.subscriptions.push(watcher)
 }
 
 async function checkStashes() {
-  if (!gitExtension?.exports) {
-    updateDot(0)
-    return
-  }
-
-  const api = gitExtension.exports
-  if (api.repositories.length === 0) {
+  const folders = vscode.workspace.workspaceFolders
+  if (!folders) {
     updateDot(0)
     return
   }
 
   let totalStashes = 0
 
-  for (const repo of api.repositories) {
+  for (const folder of folders) {
     try {
-      const stashCount = await getStashCount(repo.rootUri.fsPath)
-      totalStashes += stashCount
+      const count = await getStashCount(folder.uri.fsPath)
+      totalStashes += count
     } catch {
-      // Ignore errors
+      // ignore
     }
   }
 
@@ -118,15 +88,7 @@ function updateDot(stashCount: number) {
     statusBarItem.tooltip = "No stashed changes"
   }
   statusBarItem.show()
-}
-
-async function updateStatusBar(repo: GitRepository) {
-  try {
-    const stashCount = await getStashCount(repo.rootUri.fsPath)
-    updateDot(stashCount)
-  } catch {
-    updateDot(0)
-  }
+  console.log(`Mustache: ${stashCount} stashes found`)
 }
 
 export function deactivate() {
