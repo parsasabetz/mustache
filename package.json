@@ -1,5 +1,5 @@
 {
-  "name": "Git Mustache",
+  "name": "mustachegit",
   "displayName": "Mustache - Git Stash Indicator",
   "version": "0.1.0",
   "description": "Shows an indicator in the status bar when you have stashed git changes",
