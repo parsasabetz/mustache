@@ -8,6 +8,7 @@
   "printWidth": 80,
   "sortPackageJson": true,
   "insertFinalNewline": true,
+  "singleQuote": false,
   "ignorePatterns": [
     ".gitignore",
     "**/node_modules/**",
