@@ -3,7 +3,7 @@ import type { GitAPI, GitRepository } from "./types"
 
 // modules
 import * as vscode from "vscode"
-import Bun from "bun"
+import { exec } from "child_process"
 
 let statusBarItem: vscode.StatusBarItem
 let gitExtension: vscode.Extension<GitAPI> | undefined
@@ -63,13 +63,13 @@ function setupGitListeners() {
 
 async function checkStashes() {
   if (!gitExtension?.exports) {
-    statusBarItem.hide()
+    updateDot(0)
     return
   }
 
   const api = gitExtension.exports
   if (api.repositories.length === 0) {
-    statusBarItem.hide()
+    updateDot(0)
     return
   }
 
@@ -80,45 +80,52 @@ async function checkStashes() {
       const stashCount = await getStashCount(repo.rootUri.fsPath)
       totalStashes += stashCount
     } catch {
-      // Ignore errors when checking stashes
+      // Ignore errors
     }
   }
 
-  if (totalStashes > 0) {
-    statusBarItem.text = `$(git-stash) ${totalStashes}`
-    statusBarItem.tooltip = `You have ${totalStashes} stashed change${totalStashes === 1 ? "" : "s"}`
-    statusBarItem.show()
-  } else {
-    statusBarItem.hide()
-  }
+  updateDot(totalStashes)
 }
 
-async function getStashCount(workspacePath: string): Promise<number> {
-  try {
-    const output = await Bun.$`git stash list`.cwd(workspacePath).text()
-    const lines = output
-      .trim()
-      .split("\n")
-      .filter((line) => line.trim())
-    return lines.length
-  } catch {
-    return 0
+function getStashCount(workspacePath: string): Promise<number> {
+  return new Promise((resolve) => {
+    exec(
+      "git stash list",
+      { cwd: workspacePath, timeout: 5000 },
+      (err, stdout) => {
+        if (err) {
+          resolve(0)
+          return
+        }
+        const lines = stdout
+          .trim()
+          .split("\n")
+          .filter((line) => line.trim())
+        resolve(lines.length)
+      },
+    )
+  })
+}
+
+function updateDot(stashCount: number) {
+  if (stashCount > 0) {
+    statusBarItem.text = "●"
+    statusBarItem.color = new vscode.ThemeColor("charts.blue")
+    statusBarItem.tooltip = `You have ${stashCount} stashed change${stashCount === 1 ? "" : "s"}`
+  } else {
+    statusBarItem.text = "●"
+    statusBarItem.color = new vscode.ThemeColor("charts.gray")
+    statusBarItem.tooltip = "No stashed changes"
   }
+  statusBarItem.show()
 }
 
 async function updateStatusBar(repo: GitRepository) {
   try {
     const stashCount = await getStashCount(repo.rootUri.fsPath)
-
-    if (stashCount > 0) {
-      statusBarItem.text = `$(git-stash) ${stashCount}`
-      statusBarItem.tooltip = `You have ${stashCount} stashed change${stashCount === 1 ? "" : "s"}`
-      statusBarItem.show()
-    } else {
-      statusBarItem.hide()
-    }
+    updateDot(stashCount)
   } catch {
-    statusBarItem.hide()
+    updateDot(0)
   }
 }
 
