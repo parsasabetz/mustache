@@ -1,10 +1,16 @@
 # dependencies (bun install)
 node_modules
 
+# IDE
+.idea
+.vscode-test
+
 # output
 out
 dist
 *.tgz
+*.vsix
+
 
 # code coverage
 coverage
