@@ -4,6 +4,7 @@ src/**
 node_modules/**
 .gitignore
 tsconfig.json
+pnpm-lock.yaml
 .oxfmtrc.json
 .oxlintrc.json
 **/*.ts
