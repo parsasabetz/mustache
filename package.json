@@ -1,0 +1,14 @@
+{
+  "name": "mustache",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.73.0"
+  },
+  "peerDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
