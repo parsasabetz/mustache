@@ -1,14 +1,12 @@
 # Mustache
 
-A lightweight VS Code / Cursor extension that shows a dot in your status bar when you have stashed git changes.
+I forget things, so a lightweight VS Code / Cursor extension that shows a dot in your status bar when you have stashed git changes, helps me and maybe it helps ya too.
 
 **Blue dot** = stashes exist. **Gray dot** = no stashes.
 
-![mustache demo](https://raw.githubusercontent.com/parsasabetz/mustache/main/assets/demo.png)
-
 ## Why?
 
-You stash some changes, forget about them, and never come back. Mustache makes sure you don't.
+You stash some changes, forget about them, and never come back, maybe even do extra work later. At least I sometimes do.
 
 ## Features
 
@@ -28,8 +26,6 @@ Search for **"Mustache"** in the VS Code / Cursor extensions marketplace, or ins
 pnpm install
 pnpm run compile
 ```
-
-Press `F5` to launch the Extension Development Host.
 
 ## Build
 
